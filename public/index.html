@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VistoriaISP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0e0f11;--bg2:#161719;--bg3:#1e2024;--bg4:#252830;
+  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);
+  --text:#e8e9eb;--text2:#8a8f99;--text3:#454a56;
+  --accent:#00e5a0;--accent2:#00b87d;
+  --warn:#f5a623;--danger:#ff4d4d;--info:#4da6ff;
+  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
+  --r:8px;--r2:12px;--r3:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.5}
+.screen{display:none;min-height:100vh;flex-direction:column}
+.screen.active{display:flex}
+
+/* NAV */
+nav{display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:52px;border-bottom:1px solid var(--border);background:var(--bg);position:sticky;top:0;z-index:100;flex-shrink:0}
+.logo{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--accent);letter-spacing:.04em;cursor:pointer}
+.logo span{color:var(--text3)}
+.nav-tabs{display:flex;gap:2px}
+.ntab{padding:6px 14px;border-radius:6px;font-size:12px;cursor:pointer;border:none;background:transparent;color:var(--text2);font-family:var(--sans);transition:all .15s}
+.ntab:hover{background:var(--bg3);color:var(--text)}
+.ntab.on{background:var(--accent);color:#000;font-weight:600}
+
+/* HOME */
+#home{align-items:center;justify-content:center;padding:48px 20px;text-align:center}
+.badge{font-family:var(--mono);font-size:10px;color:var(--accent);border:1px solid rgba(0,229,160,.2);padding:4px 12px;border-radius:20px;margin-bottom:28px;display:inline-block;letter-spacing:.1em;text-transform:uppercase}
+h1{font-size:clamp(26px,5vw,46px);font-weight:300;line-height:1.1;letter-spacing:-.02em;margin-bottom:12px}
+h1 b{font-weight:600;color:var(--accent)}
+.sub{font-size:15px;color:var(--text2);max-width:440px;margin:0 auto 44px;line-height:1.7}
+.home-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;max-width:560px;width:100%}
+.hc{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r3);padding:28px 22px;text-align:left;cursor:pointer;transition:all .2s}
+.hc:hover{border-color:rgba(0,229,160,.4);transform:translateY(-2px);background:var(--bg3)}
+.hc-ico{font-size:28px;margin-bottom:16px}
+.hc-t{font-size:15px;font-weight:600;margin-bottom:6px}
+.hc-d{font-size:12px;color:var(--text2);line-height:1.55}
+.hc-a{font-size:11px;color:var(--accent);font-family:var(--mono);margin-top:14px;display:block}
+
+/* PAINEL */
+#painel{flex-direction:column}
+.pw{flex:1;padding:20px;max-width:1100px;margin:0 auto;width:100%}
+.ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px}
+.ph-title{font-size:18px;font-weight:600}
+.btn-add{padding:9px 18px;background:var(--accent);color:#000;border:none;border-radius:var(--r);font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);transition:background .15s}
+.btn-add:hover{background:var(--accent2)}
+.sg{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:20px}
+.sc{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:14px}
+.sc-v{font-size:26px;font-weight:700;font-family:var(--mono);color:var(--accent)}
+.sc-v.w{color:var(--warn)}.sc-v.d{color:var(--danger)}
+.sc-l{font-size:11px;color:var(--text2);margin-top:3px;text-transform:uppercase;letter-spacing:.05em}
+.search-bar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.search-bar input{flex:1;min-width:180px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r);padding:8px 12px;font-size:13px;color:var(--text);font-family:var(--sans)}
+.search-bar input:focus{outline:none;border-color:var(--accent)}
+.fbtn{padding:6px 14px;border-radius:20px;font-size:12px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;font-family:var(--sans);transition:all .15s}
+.fbtn:hover,.fbtn.on{background:var(--bg3);border-color:var(--border2);color:var(--text)}
+.vlist{display:flex;flex-direction:column;gap:8px}
+.vcard{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:14px 16px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .15s}
+.vcard:hover{border-color:var(--border2);background:var(--bg3)}
+.vcard-ico{width:38px;height:38px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.ico-t{background:rgba(0,229,160,.08);border:1px solid rgba(0,229,160,.18)}
+.ico-p{background:rgba(77,166,255,.08);border:1px solid rgba(77,166,255,.18)}
+.vcard-info{flex:1;min-width:0}
+.vc-nome{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vc-meta{font-size:11px;color:var(--text2);margin-top:3px}
+.vc-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.nf{font-size:11px;color:var(--text3);font-family:var(--mono)}
+.np{font-family:var(--mono);font-size:12px;font-weight:700;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.np0{background:var(--bg3);color:var(--text3);border:1px solid var(--border)}
+.np1,.np2{background:rgba(255,77,77,.12);color:var(--danger);border:1px solid rgba(255,77,77,.25)}
+.np3{background:rgba(245,166,35,.12);color:var(--warn);border:1px solid rgba(245,166,35,.25)}
+.np4,.np5{background:rgba(0,229,160,.12);color:var(--accent);border:1px solid rgba(0,229,160,.25)}
+.dot{width:8px;height:8px;border-radius:50%}
+.dot-ok{background:var(--accent)}.dot-w{background:var(--warn)}.dot-nd{background:var(--text3)}
+.empty{text-align:center;padding:60px 20px;color:var(--text2)}
+.empty-ico{font-size:36px;margin-bottom:14px;opacity:.35}
+.loading{text-align:center;padding:40px;color:var(--text2);font-family:var(--mono);font-size:13px}
+
+/* DETALHE */
+#detalhe{flex-direction:column}
+.dw{flex:1;padding:20px;max-width:780px;margin:0 auto;width:100%}
+.back{display:flex;align-items:center;gap:6px;color:var(--text2);font-size:13px;cursor:pointer;margin-bottom:18px;width:fit-content;transition:color .15s}
+.back:hover{color:var(--accent)}
+.det-tipo{font-size:10px;padding:3px 10px;border-radius:20px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em}
+.dt-t{background:rgba(0,229,160,.1);color:var(--accent);border:1px solid rgba(0,229,160,.2)}
+.dt-p{background:rgba(77,166,255,.1);color:var(--info);border:1px solid rgba(77,166,255,.2)}
+.det-title{font-size:22px;font-weight:600;margin:8px 0 4px}
+.det-meta{font-size:12px;color:var(--text2);display:flex;gap:14px;flex-wrap:wrap}
+.det-sec{margin-bottom:20px}
+.det-sec-t{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.det-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px}
+.di{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px}
+.di-l{font-size:11px;color:var(--text2);margin-bottom:3px}
+.di-v{font-size:13px;font-weight:500}
+.di-v.ok{color:var(--accent)}.di-v.w{color:var(--warn)}.di-v.bad{color:var(--danger)}
+.item-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);margin-bottom:10px;overflow:hidden}
+.ic-head{padding:11px 14px;background:var(--bg3);display:flex;align-items:center;justify-content:space-between}
+.ic-title{font-size:13px;font-weight:500}
+.ic-obs{padding:10px 14px;font-size:12px;color:var(--text2);line-height:1.6;border-top:1px solid var(--border)}
+.fotos-grid{padding:10px 14px;border-top:1px solid var(--border);display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:6px}
+.fg-img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px;border:1px solid var(--border);cursor:pointer;transition:transform .15s}
+.fg-img:hover{transform:scale(1.04)}
+
+/* FORMULÁRIO */
+#formulario{flex-direction:column}
+.fw{flex:1;padding:20px;max-width:620px;margin:0 auto;width:100%}
+.sdots{display:flex;gap:5px;margin-bottom:24px}
+.sd{height:3px;flex:1;border-radius:2px;background:var(--bg3);transition:background .3s}
+.sd.done{background:var(--accent2)}.sd.act{background:var(--accent)}
+.fstep{display:none}.fstep.active{display:block}
+.fs-eye{font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px}
+.fs-t{font-size:22px;font-weight:600;margin-bottom:4px}
+.fs-s{font-size:13px;color:var(--text2);margin-bottom:22px;line-height:1.6}
+.fcard{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);margin-bottom:12px;overflow:hidden}
+.fcb{padding:16px}
+.flbl{font-size:11px;color:var(--text2);margin-bottom:6px;display:flex;align-items:center;gap:5px;font-weight:500;text-transform:uppercase;letter-spacing:.04em}
+.req{color:var(--danger)}
+.ctag{font-size:10px;padding:1px 6px;border-radius:3px;background:rgba(255,77,77,.1);color:var(--danger);border:1px solid rgba(255,77,77,.2);text-transform:none;letter-spacing:0}
+input[type=text],input[type=date],textarea,select{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:10px 12px;font-size:13px;color:var(--text);font-family:var(--sans);transition:border-color .15s}
+input:focus,textarea:focus{outline:none;border-color:var(--accent)}
+textarea{resize:none;height:68px;line-height:1.55}
+.tg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.tc{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:20px 14px;text-align:center;cursor:pointer;transition:all .15s}
+.tc:hover{border-color:var(--border2)}
+.tc.sel{border-color:var(--accent);background:rgba(0,229,160,.05)}
+.tc-ico{font-size:26px;margin-bottom:10px;display:block}
+.tc-n{font-size:14px;font-weight:600}.tc.sel .tc-n{color:var(--accent)}
+.tc-d{font-size:11px;color:var(--text2);margin-top:3px}
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.clbl{font-size:10px;color:var(--text3);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
+.gps-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;border:1px dashed var(--border2);border-radius:var(--r);background:transparent;cursor:pointer;font-size:13px;color:var(--text2);font-family:var(--sans);transition:all .15s}
+.gps-btn:hover{border-color:var(--accent);color:var(--accent)}
+.gps-ok{font-size:12px;color:var(--accent);padding:6px 10px;background:rgba(0,229,160,.07);border-radius:var(--r);margin-top:6px;display:none;border:1px solid rgba(0,229,160,.15)}
+.rg{display:flex;flex-direction:column;gap:5px}
+.ro{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);cursor:pointer;font-size:13px;transition:all .15s}
+.ro:hover{border-color:var(--border2)}
+.ro.s-ok{border-color:var(--accent);background:rgba(0,229,160,.07);color:var(--accent)}
+.ro.s-warn{border-color:var(--warn);background:rgba(245,166,35,.07);color:var(--warn)}
+.ro.s-bad{border-color:var(--danger);background:rgba(255,77,77,.07);color:var(--danger)}
+.rdot{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--border2);flex-shrink:0}
+.ro.s-ok .rdot{background:var(--accent);border-color:var(--accent)}
+.ro.s-warn .rdot{background:var(--warn);border-color:var(--warn)}
+.ro.s-bad .rdot{background:var(--danger);border-color:var(--danger)}
+.nrow{display:flex;gap:4px;margin-bottom:6px}
+.nb{flex:1;padding:8px 2px;border:1px solid var(--border);border-radius:var(--r);background:var(--bg3);cursor:pointer;font-size:13px;font-family:var(--mono);color:var(--text2);text-align:center;transition:all .15s}
+.nb:hover{border-color:var(--border2);color:var(--text)}
+.nb.n-bad{background:rgba(255,77,77,.1);border-color:var(--danger);color:var(--danger);font-weight:700}
+.nb.n-avg{background:rgba(245,166,35,.1);border-color:var(--warn);color:var(--warn);font-weight:700}
+.nb.n-ok{background:rgba(0,229,160,.1);border-color:var(--accent);color:var(--accent);font-weight:700}
+.nlbls{display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:12px}
+
+/* photo cards */
+.phcard{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);margin-bottom:10px;overflow:hidden;transition:border-color .2s}
+.phcard.has{border-color:rgba(0,229,160,.35)}
+.phhead{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:var(--bg3);cursor:pointer;user-select:none}
+.phhead-l{display:flex;align-items:center;gap:10px}
+.phnum{width:24px;height:24px;border-radius:50%;background:var(--bg2);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:11px;font-family:var(--mono);color:var(--text2);flex-shrink:0;transition:all .2s}
+.phcard.has .phnum{background:var(--accent);border-color:var(--accent);color:#000;font-weight:700}
+.phttl{font-size:13px;font-weight:500}
+.phcard.has .phttl{color:var(--accent)}
+.phsub{font-size:11px;color:var(--text2);margin-top:1px}
+.fbdg{font-size:11px;padding:2px 9px;border-radius:10px;background:var(--bg2);border:1px solid var(--border);color:var(--text2);font-family:var(--mono);white-space:nowrap}
+.phcard.has .fbdg{background:rgba(0,229,160,.08);border-color:rgba(0,229,160,.25);color:var(--accent)}
+.phchv{font-size:10px;color:var(--text3);margin-left:6px;transition:transform .2s;flex-shrink:0}
+.phchv.open{transform:rotate(180deg)}
+.phbody{padding:14px;border-top:1px solid var(--border);display:none}
+.phbody.open{display:block}
+.guide{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;margin-bottom:12px;font-size:12px;color:var(--text2);line-height:1.55}
+.guide strong{color:var(--text);font-weight:500;display:block;margin-bottom:3px}
+.cilist{margin-bottom:12px}
+.ci{display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-top:1px solid var(--border);cursor:pointer}
+.ci:first-child{border-top:none}
+.cibox{width:15px;height:15px;min-width:15px;border:1.5px solid var(--border2);border-radius:3px;display:flex;align-items:center;justify-content:center;margin-top:1px;transition:all .15s}
+.ci.chk .cibox{background:var(--accent);border-color:var(--accent)}
+.cilbl{font-size:12px;color:var(--text2);line-height:1.4}
+.ci.chk .cilbl{color:var(--text)}
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:6px;margin-bottom:8px}
+.tw{position:relative;aspect-ratio:1;border-radius:7px;overflow:hidden;background:var(--bg3);border:1px solid var(--border)}
+.ti{width:100%;height:100%;object-fit:cover;display:block}
+.tov{position:absolute;inset:0;background:rgba(0,0,0,0);transition:background .15s;display:flex;align-items:flex-start;justify-content:flex-end;padding:4px}
+.tw:hover .tov{background:rgba(0,0,0,.5)}
+.trm{width:18px;height:18px;border-radius:50%;background:var(--danger);color:#fff;border:none;cursor:pointer;font-size:12px;line-height:18px;text-align:center;opacity:0;transition:opacity .15s;font-family:var(--sans)}
+.tw:hover .trm{opacity:1}
+.tnum{position:absolute;bottom:3px;left:3px;font-size:10px;color:rgba(255,255,255,.8);background:rgba(0,0,0,.55);padding:1px 4px;border-radius:3px;font-family:var(--mono)}
+.atile{aspect-ratio:1;border-radius:7px;border:1px dashed var(--border2);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;gap:3px}
+.atile:hover{border-color:var(--accent);background:rgba(0,229,160,.04)}
+.atile-ico{font-size:20px;color:var(--text3)}
+.atile:hover .atile-ico{color:var(--accent)}
+.atile-txt{font-size:10px;color:var(--text3);font-family:var(--mono)}
+.atile:hover .atile-txt{color:var(--accent)}
+.upbar{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px dashed var(--border2);border-radius:var(--r);cursor:pointer;transition:all .15s;margin-bottom:6px}
+.upbar:hover{border-color:var(--accent)}
+.upbar-ico{font-size:14px;color:var(--text3)}
+.upbar:hover .upbar-ico{color:var(--accent)}
+.upbar-t{flex:1;font-size:13px;color:var(--text2)}
+.upbar:hover .upbar-t{color:var(--text)}
+.upbar-s{font-size:11px;color:var(--text3);margin-top:1px}
+
+.progbar{height:3px;background:var(--bg3);border-radius:2px;margin-bottom:18px}
+.progfill{height:100%;background:var(--accent);border-radius:2px;transition:width .4s}
+.sbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.sbitem{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;flex:1;min-width:70px}
+.sbv{font-size:20px;font-weight:700;font-family:var(--mono);color:var(--accent)}
+.sbv.nd{color:var(--warn)}.sbl{font-size:11px;color:var(--text2);margin-top:2px}
+
+.navf{display:flex;gap:8px;margin-top:22px;padding-top:16px;border-top:1px solid var(--border)}
+.btnnext{flex:1;padding:12px;background:var(--accent);border:none;border-radius:var(--r);color:#000;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--sans);transition:background .15s}
+.btnnext:hover{background:var(--accent2)}
+.btnnext:disabled{opacity:.4;cursor:not-allowed}
+.btnback{padding:12px 16px;background:transparent;border:1px solid var(--border2);border-radius:var(--r);color:var(--text2);font-size:14px;cursor:pointer;font-family:var(--sans);transition:all .15s}
+.btnback:hover{background:var(--bg3);color:var(--text)}
+
+/* send overlay */
+.sending{position:fixed;inset:0;background:rgba(14,15,17,.92);display:none;align-items:center;justify-content:center;z-index:200;flex-direction:column;gap:16px}
+.sending.show{display:flex}
+.spin{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.sending p{font-size:14px;color:var(--text2)}
+
+/* success */
+.sucscreen{text-align:center;padding:60px 20px;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.suc-ico{font-size:52px;margin-bottom:18px}
+.suc-t{font-size:22px;font-weight:600;color:var(--accent);margin-bottom:8px}
+.suc-s{font-size:13px;color:var(--text2);max-width:340px;line-height:1.65;margin-bottom:26px}
+.suc-btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.sbtn{padding:10px 20px;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:all .15s}
+.sbtn.p{background:var(--accent);border:none;color:#000}.sbtn.p:hover{background:var(--accent2)}
+.sbtn.s{background:transparent;border:1px solid var(--border2);color:var(--text2)}.sbtn.s:hover{background:var(--bg3);color:var(--text)}
+
+/* lightbox */
+.lb{position:fixed;inset:0;background:rgba(0,0,0,.93);z-index:300;display:none;align-items:center;justify-content:center;padding:20px}
+.lb.open{display:flex}
+.lb-img{max-width:100%;max-height:90vh;border-radius:var(--r2);object-fit:contain}
+.lb-x{position:fixed;top:14px;right:14px;width:36px;height:36px;border-radius:50%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:301}
+
+@media(max-width:500px){.vc-right{flex-wrap:wrap;gap:6px}.det-meta{gap:8px}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo" onclick="goHome()">Vistoria<span>ISP</span></div>
+  <div class="nav-tabs">
+    <button class="ntab" onclick="goHome()">Início</button>
+    <button class="ntab" id="tab-painel" onclick="showPainel()">Painel</button>
+    <button class="ntab on" id="tab-nova" onclick="showForm()">+ Nova</button>
+  </div>
+</nav>
+
+<!-- HOME -->
+<div id="home" class="screen active">
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 20px;text-align:center">
+    <div class="badge">M&A · Due Diligence Técnica</div>
+    <h1>Vistoria de campo<br><b>sem papel, sem perda</b></h1>
+    <p class="sub">Registre Torres e PoPs com fotos, notas e GPS.<br>Tudo consolidado no painel para o processo de aquisição.</p>
+    <div class="home-grid">
+      <div class="hc" onclick="showForm()">
+        <div class="hc-ico">📋</div>
+        <div class="hc-t">Nova vistoria</div>
+        <div class="hc-d">Checklist no campo com fotos, notas e coordenadas GPS. Torre ou PoP.</div>
+        <span class="hc-a">→ iniciar</span>
+      </div>
+      <div class="hc" onclick="showPainel()">
+        <div class="hc-ico">📊</div>
+        <div class="hc-t">Painel de gestão</div>
+        <div class="hc-d">Todos os sites vistoriados, notas e status do M&A em um só lugar.</div>
+        <span class="hc-a">→ abrir</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAINEL -->
+<div id="painel" class="screen">
+  <div class="pw">
+    <div class="ph">
+      <div class="ph-title">Painel de gestão</div>
+      <button class="btn-add" onclick="showForm()">+ Nova vistoria</button>
+    </div>
+    <div class="sg" id="stats-grid">
+      <div class="sc"><div class="sc-v">—</div><div class="sc-l">Total</div></div>
+    </div>
+    <div class="search-bar">
+      <input type="text" id="busca" placeholder="Buscar por nome ou técnico..." oninput="loadPainel()">
+      <button class="fbtn on" id="fb-todos" onclick="setFiltro('todos',this)">Todos</button>
+      <button class="fbtn" id="fb-torre" onclick="setFiltro('torre',this)">Torres</button>
+      <button class="fbtn" id="fb-pop" onclick="setFiltro('pop',this)">PoPs</button>
+      <button class="fbtn" id="fb-atencao" onclick="setFiltro('atencao',this)">Atenção</button>
+    </div>
+    <div class="vlist" id="vlist"><div class="loading">carregando...</div></div>
+  </div>
+</div>
+
+<!-- DETALHE -->
+<div id="detalhe" class="screen">
+  <div class="dw">
+    <div class="back" onclick="showPainel()">← Voltar ao painel</div>
+    <div id="det-content"></div>
+  </div>
+</div>
+
+<!-- FORMULÁRIO -->
+<div id="formulario" class="screen">
+  <div class="fw">
+    <div class="sdots">
+      <div class="sd act" id="sd0"></div><div class="sd" id="sd1"></div>
+      <div class="sd" id="sd2"></div><div class="sd" id="sd3"></div><div class="sd" id="sd4"></div>
+    </div>
+
+    <!-- Step 0 -->
+    <div class="fstep active" id="fs0">
+      <div class="fs-eye">Passo 1 / 5</div>
+      <div class="fs-t">Identificação</div>
+      <div class="fs-s">Dados básicos da estrutura e do técnico.</div>
+      <div class="fcard"><div class="fcb">
+        <div style="margin-bottom:12px"><div class="flbl">Nome da estrutura <span class="req">*</span></div><input type="text" id="f-nome" placeholder="Ex: Torre Centro, PoP Matriz"></div>
+        <div style="margin-bottom:12px"><div class="flbl">Data da avaliação <span class="req">*</span></div><input type="date" id="f-data"></div>
+        <div><div class="flbl">Técnico responsável <span class="req">*</span></div><input type="text" id="f-tec" placeholder="Nome completo"></div>
+      </div></div>
+      <div class="flbl" style="margin-bottom:8px">Tipo de estrutura <span class="req">*</span></div>
+      <div class="tg">
+        <div class="tc" id="tc-t" onclick="setTipo('torre')"><span class="tc-ico">📡</span><div class="tc-n">Torre</div><div class="tc-d">Autoportante, estaiada ou monopolo</div></div>
+        <div class="tc" id="tc-p" onclick="setTipo('pop')"><span class="tc-ico">🏠</span><div class="tc-n">PoP</div><div class="tc-d">Ponto de presença / data center</div></div>
+      </div>
+      <div class="navf"><button class="btnnext" onclick="ir(1)">Próximo →</button></div>
+    </div>
+
+    <!-- Step 1 -->
+    <div class="fstep" id="fs1">
+      <div class="fs-eye">Passo 2 / 5</div>
+      <div class="fs-t">Localização</div>
+      <div class="fs-s">Endereço e coordenadas GPS do local.</div>
+      <div class="fcard"><div class="fcb">
+        <div style="margin-bottom:12px"><div class="flbl">Endereço completo</div><input type="text" id="f-end" placeholder="Rua, número, bairro, cidade, estado"></div>
+        <div>
+          <div class="flbl">Coordenadas GPS <span class="req">*</span></div>
+          <div class="cgrid">
+            <div><div class="clbl">Latitude</div><input type="text" id="f-lat" placeholder="-23.550520"></div>
+            <div><div class="clbl">Longitude</div><input type="text" id="f-lon" placeholder="-46.633308"></div>
+          </div>
+          <button class="gps-btn" onclick="pegarGPS()">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Capturar localização atual
+          </button>
+          <div class="gps-ok" id="gps-ok">✓ Coordenadas capturadas com sucesso</div>
+        </div>
+      </div></div>
+      <div class="navf"><button class="btnback" onclick="ir(0)">← Voltar</button><button class="btnnext" onclick="ir(2)">Próximo →</button></div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="fstep" id="fs2">
+      <div class="fs-eye">Passo 3 / 5</div>
+      <div class="fs-t">Situação ao chegar</div>
+      <div class="fs-s">Primeira impressão e condições gerais.</div>
+      <div class="fcard"><div class="fcb">
+        <div style="margin-bottom:12px">
+          <div class="flbl">Nota geral ao chegar</div>
+          <div class="nrow" id="nr-ch"><button class="nb" onclick="setNota('nr-ch',1)">1</button><button class="nb" onclick="setNota('nr-ch',2)">2</button><button class="nb" onclick="setNota('nr-ch',3)">3</button><button class="nb" onclick="setNota('nr-ch',4)">4</button><button class="nb" onclick="setNota('nr-ch',5)">5</button></div>
+          <div class="nlbls"><span>Péssimo</span><span>Excelente</span></div>
+        </div>
+        <div style="margin-bottom:12px">
+          <div class="flbl">Tipo de acesso</div>
+          <div class="rg" id="rg-ac">
+            <div class="ro" onclick="selR('rg-ac',this,'ok')"><span class="rdot"></span>Fácil e seguro (vias pavimentadas, portaria)</div>
+            <div class="ro" onclick="selR('rg-ac',this,'warn')"><span class="rdot"></span>Moderado (vias não pavimentadas, portão simples)</div>
+            <div class="ro" onclick="selR('rg-ac',this,'bad')"><span class="rdot"></span>Difícil / área de risco</div>
+          </div>
+        </div>
+        <div><div class="flbl">Descrição</div><textarea id="f-ch-desc" placeholder="Descreva as condições ao chegar..."></textarea></div>
+      </div></div>
+
+      <div class="phcard" id="phc-ch">
+        <div class="phhead" onclick="tPh('phb-ch','phv-ch')">
+          <div class="phhead-l"><div class="phnum" id="phn-ch">1</div><div><div class="phttl">Fotos da chegada</div><div class="phsub">Vista externa, acesso e entorno</div></div></div>
+          <div style="display:flex;align-items:center;gap:6px"><span class="fbdg" id="fb-ch">0 fotos</span><span class="phchv open" id="phv-ch">▾</span></div>
+        </div>
+        <div class="phbody open" id="phb-ch">
+          <div class="guide"><strong>O que fotografar</strong>Vista externa do local, portão, cerca perimetral e entorno imediato.</div>
+          <div class="cilist">
+            <div class="ci" onclick="tCI(this)"><div class="cibox"><svg width="8" height="6" viewBox="0 0 8 6" fill="none" style="display:none"><polyline points="1,3 3,5 7,1" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="cilbl">Vista externa / fachada</span></div>
+            <div class="ci" onclick="tCI(this)"><div class="cibox"><svg width="8" height="6" viewBox="0 0 8 6" fill="none" style="display:none"><polyline points="1,3 3,5 7,1" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="cilbl">Portão / controle de acesso</span></div>
+            <div class="ci" onclick="tCI(this)"><div class="cibox"><svg width="8" height="6" viewBox="0 0 8 6" fill="none" style="display:none"><polyline points="1,3 3,5 7,1" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="cilbl">Cerca perimetral e segurança</span></div>
+          </div>
+          <div class="gallery" id="gal-ch"><div class="atile" onclick="document.getElementById('u-ch').click()"><div class="atile-ico">+</div><div class="atile-txt">foto</div></div></div>
+          <div class="upbar" onclick="document.getElementById('u-ch').click()"><div class="upbar-ico">↑</div><div class="upbar-t">Adicionar fotos<div class="upbar-s">Várias de uma vez ou em lotes</div></div></div>
+          <input type="file" id="u-ch" multiple accept="image/*" style="display:none" onchange="addF(this,'gal-ch','fb-ch','phc-ch','phn-ch')">
+        </div>
+      </div>
+      <div class="navf"><button class="btnback" onclick="ir(1)">← Voltar</button><button class="btnnext" onclick="ir(3)">Próximo →</button></div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="fstep" id="fs3">
+      <div class="fs-eye">Passo 4 / 5</div>
+      <div class="fs-t" id="fs3t">Vistoria estrutural</div>
+      <div class="fs-s">Avalie cada item com nota, descrição e fotos.</div>
+      <div class="sbar">
+        <div class="sbitem"><div class="sbv" id="cnt-ok">0</div><div class="sbl">Concluídos</div></div>
+        <div class="sbitem"><div class="sbv nd" id="cnt-nd">0</div><div class="sbl">Pendentes</div></div>
+        <div class="sbitem"><div class="sbv" id="cnt-f">0</div><div class="sbl">Fotos</div></div>
+      </div>
+      <div class="progbar"><div class="progfill" id="prog3" style="width:0%"></div></div>
+      <div id="bloco-torre" style="display:none"><div id="torre-items"></div></div>
+      <div id="bloco-pop" style="display:none"><div id="pop-items"></div></div>
+      <div class="navf"><button class="btnback" onclick="ir(2)">← Voltar</button><button class="btnnext" onclick="ir(4)">Próximo →</button></div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="fstep" id="fs4">
+      <div class="fs-eye">Passo 5 / 5</div>
+      <div class="fs-t">Resumo e envio</div>
+      <div class="fs-s">Revise antes de enviar ao servidor.</div>
+      <div class="fcard"><div class="fcb" id="resumo-body"></div></div>
+      <div class="fcard"><div class="fcb">
+        <div class="flbl">Observações finais e riscos</div>
+        <textarea id="f-obs" placeholder="Pendências, riscos ou qualquer observação para o dossiê do M&A..." style="height:90px"></textarea>
+      </div></div>
+      <div class="navf"><button class="btnback" onclick="ir(3)">← Voltar</button><button class="btnnext" id="btn-enviar" onclick="enviar()">Enviar vistoria ↑</button></div>
+    </div>
+
+    <!-- Step 5: sucesso -->
+    <div class="fstep" id="fs5">
+      <div class="sucscreen">
+        <div class="suc-ico">✅</div>
+        <div class="suc-t">Vistoria enviada!</div>
+        <div class="suc-s">Todos os dados e fotos foram salvos no servidor. Você pode ver esta vistoria no painel de gestão.</div>
+        <div class="suc-btns">
+          <button class="sbtn p" onclick="showPainel()">Ver no painel</button>
+          <button class="sbtn s" onclick="showForm()">Nova vistoria</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Overlay de envio -->
+<div class="sending" id="sending-overlay">
+  <div class="spin"></div>
+  <p id="sending-msg">Enviando fotos ao servidor...</p>
+</div>
+
+<!-- Lightbox -->
+<div class="lb" id="lb" onclick="document.getElementById('lb').classList.remove('open')">
+  <div class="lb-x">×</div>
+  <img class="lb-img" id="lb-img" src="" alt="">
+</div>
+
+<script>
+const API = '';  // mesmo servidor
+
+// ── Navegação ──────────────────────────────────────────────────────────
+function setTab(name) {
+  document.querySelectorAll('.ntab').forEach(b=>b.classList.remove('on'));
+  const map={home:null,painel:'tab-painel',formulario:'tab-nova'};
+  if(map[name]) document.getElementById(map[name]).classList.add('on');
+}
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  setTab(id);
+}
+function goHome(){ showScreen('home'); }
+function showPainel(){ showScreen('painel'); loadPainel(); }
+function showForm(){ initForm(); showScreen('formulario'); }
+
+// ── PAINEL ────────────────────────────────────────────────────────────
+let filtroAtual='todos';
+
+function setFiltro(f, btn) {
+  filtroAtual=f;
+  document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  loadPainel();
+}
+
+async function loadPainel() {
+  const busca = document.getElementById('busca')?.value||'';
+  let url = `${API}/api/vistorias?`;
+  if(filtroAtual==='torre') url+='tipo=torre';
+  else if(filtroAtual==='pop') url+='tipo=pop';
+  if(busca) url+=`&busca=${encodeURIComponent(busca)}`;
+
+  try {
+    const [statsRes, listRes] = await Promise.all([
+      fetch(`${API}/api/stats`).then(r=>r.json()),
+      fetch(url).then(r=>r.json())
+    ]);
+    renderStats(statsRes);
+    let lista = listRes;
+    if(filtroAtual==='atencao') lista=lista.filter(v=>v.notaMedia<=2||(v.notaChegada>0&&v.notaChegada<=2));
+    renderLista(lista);
+  } catch(e) {
+    document.getElementById('vlist').innerHTML=`<div class="empty"><div class="empty-ico">⚠️</div><p>Não foi possível conectar ao servidor.<br><small style="color:var(--text3)">${e.message}</small></p></div>`;
+  }
+}
+
+function renderStats(s) {
+  document.getElementById('stats-grid').innerHTML=`
+    <div class="sc"><div class="sc-v">${s.total}</div><div class="sc-l">Total</div></div>
+    <div class="sc"><div class="sc-v">${s.torres}</div><div class="sc-l">Torres</div></div>
+    <div class="sc"><div class="sc-v">${s.pops}</div><div class="sc-l">PoPs</div></div>
+    <div class="sc"><div class="sc-v ${s.atencao>0?'d':''}">${s.atencao}</div><div class="sc-l">Atenção</div></div>
+    <div class="sc"><div class="sc-v">${s.totalFotos}</div><div class="sc-l">Fotos</div></div>
+  `;
+}
+
+function renderLista(lista) {
+  if(!lista.length){
+    document.getElementById('vlist').innerHTML=`<div class="empty"><div class="empty-ico">📋</div><p>Nenhuma vistoria encontrada.<br>Clique em "+ Nova vistoria" para começar.</p></div>`;
+    return;
+  }
+  document.getElementById('vlist').innerHTML=lista.map(v=>{
+    const nm=v.notaMedia||0;
+    const dot=nm<=2&&nm>0?'dot-w':nm>=4?'dot-ok':'dot-nd';
+    return `<div class="vcard" onclick="showDetalhe('${v.id}')">
+      <div class="vcard-ico ${v.tipo==='torre'?'ico-t':'ico-p'}">${v.tipo==='torre'?'📡':'🏠'}</div>
+      <div class="vcard-info">
+        <div class="vc-nome">${v.nome}</div>
+        <div class="vc-meta">${v.data||'—'} · ${v.tecnico||'—'} · ${v.endereco||'Sem endereço'}</div>
+      </div>
+      <div class="vc-right">
+        <span class="nf">${v.totalFotos||0}📷</span>
+        <div class="np np${nm}">${nm||'—'}</div>
+        <div class="dot ${dot}"></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── DETALHE ────────────────────────────────────────────────────────────
+async function showDetalhe(id) {
+  showScreen('detalhe');
+  document.getElementById('det-content').innerHTML='<div class="loading">carregando...</div>';
+  try {
+    const v = await fetch(`${API}/api/vistorias/${id}`).then(r=>r.json());
+    const nm = (v.itens||[]).filter(i=>i.nota>0).length
+      ? Math.round((v.itens||[]).filter(i=>i.nota>0).reduce((a,i)=>a+i.nota,0)/(v.itens||[]).filter(i=>i.nota>0).length)
+      : v.notaChegada||0;
+
+    const itensHtml=(v.itens||[]).map(it=>`
+      <div class="item-card">
+        <div class="ic-head">
+          <div class="ic-title">${it.titulo}</div>
+          ${it.nota>0?`<div class="np np${it.nota}" style="width:28px;height:28px;font-size:12px">${it.nota}</div>`:''}
+        </div>
+        ${it.obs?`<div class="ic-obs">${it.obs}</div>`:''}
+        ${(it.fotos&&it.fotos.length>0)?`<div class="fotos-grid">${it.fotos.map(f=>`<img class="fg-img" src="${f}" onclick="openLB('${f}')" loading="lazy">`).join('')}</div>`:''}
+      </div>`).join('');
+
+    const chegadaFotos=(v.fotosChegada&&v.fotosChegada.length>0)?`
+      <div class="det-sec">
+        <div class="det-sec-t">Fotos da chegada</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:6px">
+          ${v.fotosChegada.map(f=>`<img class="fg-img" src="${f}" onclick="openLB('${f}')" loading="lazy">`).join('')}
+        </div>
+      </div>`:'';
+
+    document.getElementById('det-content').innerHTML=`
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px">
+        <span class="det-tipo ${v.tipo==='torre'?'dt-t':'dt-p'}">${v.tipo==='torre'?'Torre':'PoP'}</span>
+        <div class="det-title">${v.nome}</div>
+      </div>
+      <div class="det-meta">
+        <span>📅 ${v.data||'—'}</span>
+        <span>👤 ${v.tecnico||'—'}</span>
+        <span>📍 ${v.lat&&v.lon?v.lat+', '+v.lon:'Sem GPS'}</span>
+        <span>⭐ Nota média: ${nm}</span>
+        <span>📷 ${v.totalFotos||0} fotos</span>
+      </div>
+      <div style="margin-top:20px">
+        ${chegadaFotos}
+        ${v.obs?`<div class="fcard" style="margin-bottom:16px"><div class="fcb"><div class="flbl">Observações finais</div><div style="font-size:13px;color:var(--text2);line-height:1.7;margin-top:4px">${v.obs}</div></div></div>`:''}
+        <div class="det-sec">
+          <div class="det-sec-t">Itens vistoriados</div>
+          ${itensHtml}
+        </div>
+        <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);display:flex;gap:8px">
+          <button class="sbtn s" style="font-size:12px;padding:8px 14px" onclick="delVistoria('${v.id}','${v.nome}')">Excluir vistoria</button>
+        </div>
+      </div>`;
+  } catch(e) {
+    document.getElementById('det-content').innerHTML=`<p style="color:var(--danger)">Erro ao carregar: ${e.message}</p>`;
+  }
+}
+
+async function delVistoria(id, nome) {
+  if(!confirm(`Excluir a vistoria "${nome}"? Esta ação não pode ser desfeita.`)) return;
+  await fetch(`${API}/api/vistorias/${id}`,{method:'DELETE'});
+  showPainel();
+}
+
+function openLB(src){
+  document.getElementById('lb-img').src=src;
+  document.getElementById('lb').classList.add('open');
+}
+
+// ── FORMULÁRIO ────────────────────────────────────────────────────────
+let tipo=null;
+const fc={};
+const notas={};
+const rads={};
+const fileBlobs={};  // galId -> [{file,dataUrl}]
+
+const torreConfig=[
+  {id:'t0',titulo:'Estrutura geral da torre',sub:'Vista completa, tipo e altura',guide:'Foto de baixo para cima mostrando a torre inteira. Cada face se possível. Placa e base.',crit:false,
+   checks:['Vista completa (base ao topo)','Placa de identificação','Base e fundação'],
+   extras:[{type:'radio',id:'rg-tt',label:'Tipo de torre',opts:['Autoportante','Estaiada','Monopolo / palanque']},{type:'text',id:'ft-alt',label:'Altura (metros)',ph:'Ex: 45'}]},
+  {id:'t1',titulo:'Pontos de ancoragem',sub:'Flange, parafusos e estais',guide:'Close nos parafusos e flanges. Se estaiada: ancoragem no solo, grampos e tensionadores.',crit:true,
+   checks:['Flange e parafusos da base','Ancoragem dos cabos de estai no solo','Concreto da base (rachaduras)','Grampos e tensionadores'],
+   extras:[{type:'nota',id:'nr-t1',label:'Nota — ancoragem'},{type:'obs',id:'obs-t1',ph:'Estado dos pontos de ancoragem...'}]},
+  {id:'t2',titulo:'Rack e equipamentos',sub:'Localização, organização e estado',guide:'Foto frontal do rack aberto. Traseira com cabeamento. Se aéreo, fixação na estrutura.',crit:false,
+   checks:['Vista frontal do rack (porta aberta)','Parte traseira (cabeamento)','Fixação do rack (se aéreo)'],
+   extras:[{type:'radio',id:'rg-rack',label:'Localização do rack',opts:['Aéreo — fixado na torre','No chão — abrigo / container','No chão — exposto, sem abrigo']},{type:'nota',id:'nr-t2',label:'Nota — rack'},{type:'obs',id:'obs-t2',ph:'Marcas, modelos, organização...'}]},
+  {id:'t3',titulo:'Aterramento e SPDA',sub:'Para-raios, condutor e eletrodos',guide:'Cabo condutor ao longo da torre. Barra de aterramento. Caixa de inspeção no solo.',crit:true,
+   checks:['Cabo condutor de descida','Barra de aterramento','Caixa de inspeção do eletrodo'],
+   extras:[{type:'radio',id:'rg-at',label:'Situação',opts:['Certificado (ABNT NBR 5419)','Visível sem certificação','Ausente ou em mau estado']},{type:'obs',id:'obs-t3',ph:'Estado do aterramento...'}]},
+  {id:'t4',titulo:'Antenas, rádios e cabos',sub:'Equipamentos embarcados e organização',guide:'Antenas e painéis. Rádios/ODUs e fixação. Passa-fios e organização dos cabos. Conectores.',crit:false,
+   checks:['Antenas e painéis setoriais','Rádios / ODUs e fixação','Organização dos cabos (calha, UV)','Conectores vedados'],
+   extras:[{type:'nota',id:'nr-t4',label:'Nota — equipamentos'},{type:'obs',id:'obs-t4',ph:'Quantas antenas, marcas, estado...'}]},
+];
+
+const popConfig=[
+  {id:'p0',titulo:'Fachada e acesso',sub:'Entrada, porta e entorno',guide:'Fachada externa. Porta com controle de acesso. Localização no imóvel.',crit:false,
+   checks:['Vista externa / fachada','Porta e controle de acesso'],
+   extras:[{type:'radio',id:'rg-loc',label:'Tipo de local',opts:['Sala em prédio comercial','Casa / imóvel próprio','Container / abrigo metálico','Cobertura de prédio']}]},
+  {id:'p1',titulo:'Ambiente interno',sub:'Climatização, limpeza e umidade',guide:'Panorâmica interna. AC com display de temperatura. Paredes e teto. Piso.',crit:true,
+   checks:['Vista panorâmica interna','Ar-condicionado (display visível)','Paredes e teto (infiltração, mofo)'],
+   extras:[{type:'nota',id:'nr-p1',label:'Nota — ambiente'},{type:'text',id:'fp-temp',label:'Temperatura registrada',ph:'Ex: 22°C'},{type:'obs',id:'obs-p1',ph:'Condições do ambiente...'}]},
+  {id:'p2',titulo:'Rack e organização',sub:'Equipamentos, patch panels e identificação',guide:'Frontal do rack aberto. Traseira com cabos. Etiquetas. Múltiplos racks: fotografe todos.',crit:false,
+   checks:['Vista frontal do rack (porta aberta)','Parte traseira (cabeamento)','Etiquetas de identificação'],
+   extras:[{type:'nota',id:'nr-p2',label:'Nota — rack'},{type:'text',id:'fp-racks',label:'Quantidade de racks',ph:'Ex: 2 racks de 42U'},{type:'obs',id:'obs-p2',ph:'Marcas, modelos, espaço disponível...'}]},
+  {id:'p3',titulo:'Quadro elétrico e UPS',sub:'Alimentação, disjuntores e no-break',guide:'Quadro aberto com disjuntores. UPS com display (carga e autonomia). Aterramento. Gerador.',crit:true,
+   checks:['Quadro elétrico aberto (disjuntores)','UPS / no-break com display visível','Barra de aterramento','Gerador (se houver)'],
+   extras:[{type:'radio',id:'rg-ups',label:'Situação do UPS',opts:['Presente — capacidade adequada','Presente — baterias vencidas / baixa cap.','Não possui no-break']},{type:'text',id:'fp-aut',label:'Autonomia estimada',ph:'Ex: 2h'},{type:'obs',id:'obs-p3',ph:'Estado do quadro e UPS...'}]},
+  {id:'p4',titulo:'DIO, fibra e link',sub:'Distribuidor óptico, splitters e backhaul',guide:'DIO aberto com pigtails. Splitters (se GPON). Entrada da fibra. Roteador de borda. Backup.',crit:true,
+   checks:['DIO aberto (pigtails e adaptadores)','Splitters ópticos (se GPON/FTTH)','Roteador de borda e uplinks','Link de backup (se houver)'],
+   extras:[{type:'radio',id:'rg-red',label:'Redundância do backhaul',opts:['Sim — operadoras / rotas diferentes','Sim — mesma rota (fibra paralela)','Não possui — ponto único de falha']},{type:'text',id:'fp-oper',label:'Operadora(s)',ph:'Ex: Vivo + Claro'},{type:'obs',id:'obs-p4',ph:'Estado da fibra e link...'}]},
+];
+
+function initForm() {
+  tipo=null;
+  Object.keys(fc).forEach(k=>delete fc[k]);
+  Object.keys(notas).forEach(k=>delete notas[k]);
+  Object.keys(rads).forEach(k=>delete rads[k]);
+  Object.keys(fileBlobs).forEach(k=>delete fileBlobs[k]);
+  document.getElementById('tc-t').classList.remove('sel');
+  document.getElementById('tc-p').classList.remove('sel');
+  ['f-nome','f-data','f-tec','f-end','f-lat','f-lon','f-ch-desc','f-obs'].forEach(id=>{
+    const el=document.getElementById(id); if(el)el.value='';
+  });
+  document.getElementById('f-data').value=new Date().toISOString().split('T')[0];
+  document.getElementById('gps-ok').style.display='none';
+  document.getElementById('bloco-torre').style.display='none';
+  document.getElementById('bloco-pop').style.display='none';
+  document.getElementById('torre-items').innerHTML='';
+  document.getElementById('pop-items').innerHTML='';
+  // reset gallery
+  const gal=document.getElementById('gal-ch');
+  if(gal){gal.querySelectorAll('.tw').forEach(t=>t.remove());}
+  fc['gal-ch']=0; fileBlobs['gal-ch']=[];
+  document.getElementById('fb-ch').textContent='0 fotos';
+  document.getElementById('phc-ch').classList.remove('has');
+  document.getElementById('phn-ch').textContent='1';
+  ir(0, true);
+}
+
+function buildItems(config, container) {
+  container.innerHTML=config.map((item,idx)=>`
+    <div class="phcard" id="phc-${item.id}">
+      <div class="phhead" onclick="tPh('phb-${item.id}','phv-${item.id}')">
+        <div class="phhead-l">
+          <div class="phnum" id="phn-${item.id}">${idx+1}</div>
+          <div><div class="phttl">${item.titulo}${item.crit?` <span class="ctag">crítico</span>`:''}</div><div class="phsub">${item.sub}</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px"><span class="fbdg" id="fb-${item.id}">0 fotos</span><span class="phchv" id="phv-${item.id}">▾</span></div>
+      </div>
+      <div class="phbody" id="phb-${item.id}">
+        <div class="guide"><strong>O que fotografar</strong>${item.guide}</div>
+        <div class="cilist">${item.checks.map(c=>`<div class="ci" onclick="tCI(this)"><div class="cibox"><svg width="8" height="6" viewBox="0 0 8 6" fill="none" style="display:none"><polyline points="1,3 3,5 7,1" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="cilbl">${c}</span></div>`).join('')}</div>
+        ${item.extras.map(ex=>{
+          if(ex.type==='nota') return `<div class="flbl" style="margin-bottom:6px">${ex.label}</div><div class="nrow" id="${ex.id}"><button class="nb" onclick="setNota('${ex.id}',1)">1</button><button class="nb" onclick="setNota('${ex.id}',2)">2</button><button class="nb" onclick="setNota('${ex.id}',3)">3</button><button class="nb" onclick="setNota('${ex.id}',4)">4</button><button class="nb" onclick="setNota('${ex.id}',5)">5</button></div><div class="nlbls" style="margin-bottom:12px"><span>Péssimo</span><span>Excelente</span></div>`;
+          if(ex.type==='radio') return `<div class="flbl" style="margin-bottom:6px">${ex.label}</div><div class="rg" id="${ex.id}" style="margin-bottom:12px">${ex.opts.map(o=>`<div class="ro" onclick="selR('${ex.id}',this,'ok')"><span class="rdot"></span>${o}</div>`).join('')}</div>`;
+          if(ex.type==='text') return `<div class="flbl" style="margin-bottom:6px">${ex.label}</div><input type="text" id="${ex.id}" placeholder="${ex.ph}" style="margin-bottom:12px">`;
+          if(ex.type==='obs') return `<div class="flbl" style="margin-bottom:6px">Observações</div><textarea id="${ex.id}" placeholder="${ex.ph}" style="margin-bottom:12px"></textarea>`;
+          return '';
+        }).join('')}
+        <div class="gallery" id="gal-${item.id}"><div class="atile" onclick="document.getElementById('u-${item.id}').click()"><div class="atile-ico">+</div><div class="atile-txt">foto</div></div></div>
+        <div class="upbar" onclick="document.getElementById('u-${item.id}').click()"><div class="upbar-ico">↑</div><div class="upbar-t">Adicionar mais fotos<div class="upbar-s">Várias de uma vez ou em lotes separados</div></div></div>
+        <input type="file" id="u-${item.id}" multiple accept="image/*" style="display:none" onchange="addF(this,'gal-${item.id}','fb-${item.id}','phc-${item.id}','phn-${item.id}',true)">
+      </div>
+    </div>`).join('');
+  config.forEach(item=>{fc['gal-'+item.id]=0;fileBlobs['gal-'+item.id]=[];});
+}
+
+function setTipo(t){
+  tipo=t;
+  document.getElementById('tc-t').classList.toggle('sel',t==='torre');
+  document.getElementById('tc-p').classList.toggle('sel',t==='pop');
+}
+
+function ir(step, force) {
+  if(!force){
+    if(step===1&&!document.getElementById('f-nome').value.trim()){alert('Informe o nome da estrutura.');return;}
+    if(step===1&&!tipo){alert('Selecione o tipo de estrutura (Torre ou PoP).');return;}
+  }
+  if(step===3){
+    const isTorre=tipo==='torre';
+    document.getElementById('bloco-torre').style.display=isTorre?'block':'none';
+    document.getElementById('bloco-pop').style.display=isTorre?'none':'block';
+    document.getElementById('fs3t').textContent=isTorre?'Vistoria da torre':'Vistoria do PoP';
+    const cfg=isTorre?torreConfig:popConfig;
+    const cont=isTorre?document.getElementById('torre-items'):document.getElementById('pop-items');
+    if(!cont.innerHTML) buildItems(cfg,cont);
+    updateStats();
+  }
+  if(step===4) buildResumo();
+  document.querySelectorAll('.fstep').forEach((s,i)=>s.classList.toggle('active',i===step));
+  for(let i=0;i<5;i++){const sd=document.getElementById('sd'+i);if(sd)sd.className='sd'+(i<step?' done':i===step?' act':'');}
+  window.scrollTo(0,0);
+}
+
+function tPh(bodyId,chevId){
+  const b=document.getElementById(bodyId),c=document.getElementById(chevId);
+  b.classList.toggle('open');c.classList.toggle('open');
+}
+
+function tCI(el){
+  el.classList.toggle('chk');
+  const svg=el.querySelector('svg');
+  if(svg)svg.style.display=el.classList.contains('chk')?'block':'none';
+}
+
+function selR(gid,el,type){
+  document.getElementById(gid).querySelectorAll('.ro').forEach(o=>o.classList.remove('s-ok','s-warn','s-bad'));
+  el.classList.add('s-'+type);
+  rads[gid]=el.textContent.trim();
+}
+
+function setNota(rowId,val){
+  notas[rowId]=val;
+  document.getElementById(rowId).querySelectorAll('.nb').forEach((b,i)=>{
+    b.className='nb';
+    if(i+1===val)b.classList.add(val<=2?'n-bad':val===3?'n-avg':'n-ok');
+  });
+  updateStats();
+}
+
+function pegarGPS(){
+  if(!navigator.geolocation){alert('GPS não disponível neste dispositivo.');return;}
+  navigator.geolocation.getCurrentPosition(
+    p=>{document.getElementById('f-lat').value=p.coords.latitude.toFixed(6);document.getElementById('f-lon').value=p.coords.longitude.toFixed(6);document.getElementById('gps-ok').style.display='block';},
+    ()=>{alert('Não foi possível obter a localização. Digite as coordenadas manualmente.');}
+  );
+}
+
+function addF(input,galId,badgeId,cardId,numId,contaStats){
+  const gal=document.getElementById(galId);
+  if(!gal)return;
+  if(!fc[galId])fc[galId]=0;
+  if(!fileBlobs[galId])fileBlobs[galId]=[];
+  const MAX=20, files=Array.from(input.files).slice(0,MAX-fc[galId]);
+  files.forEach(f=>{
+    const reader=new FileReader();
+    reader.onload=e=>{
+      fc[galId]++;
+      fileBlobs[galId].push({file:f, dataUrl:e.target.result});
+      const wrap=document.createElement('div');wrap.className='tw';
+      const img=document.createElement('img');img.className='ti';img.src=e.target.result;
+      const ov=document.createElement('div');ov.className='tov';
+      const rm=document.createElement('button');rm.className='trm';rm.textContent='×';
+      const idx=fileBlobs[galId].length-1;
+      rm.onclick=()=>{
+        wrap.remove();fc[galId]--;
+        fileBlobs[galId].splice(idx,1);
+        updBdg(galId,badgeId,cardId,numId);
+        if(contaStats)updateStats();
+        renumG(gal);
+      };
+      const tn=document.createElement('div');tn.className='tnum';tn.textContent=fc[galId];
+      ov.appendChild(rm);wrap.appendChild(img);wrap.appendChild(ov);wrap.appendChild(tn);
+      gal.insertBefore(wrap,gal.querySelector('.atile'));
+      updBdg(galId,badgeId,cardId,numId);
+      if(contaStats)updateStats();
+    };
+    reader.readAsDataURL(f);
+  });
+  input.value='';
+}
+
+function updBdg(galId,badgeId,cardId,numId){
+  const n=fc[galId]||0;
+  document.getElementById(badgeId).textContent=n===0?'0 fotos':n+(n===1?' foto':' fotos');
+  document.getElementById(cardId).classList.toggle('has',n>0);
+}
+
+function renumG(gal){gal.querySelectorAll('.tw').forEach((t,i)=>{const tn=t.querySelector('.tnum');if(tn)tn.textContent=i+1;});}
+
+function updateStats(){
+  const cfg=tipo==='torre'?torreConfig:popConfig;
+  const ids=cfg.map(c=>'gal-'+c.id);
+  const ok=ids.filter(id=>(fc[id]||0)>0).length;
+  const totalF=ids.reduce((a,id)=>a+(fc[id]||0),0)+(fc['gal-ch']||0);
+  document.getElementById('cnt-ok').textContent=ok;
+  document.getElementById('cnt-nd').textContent=ids.length-ok;
+  document.getElementById('cnt-f').textContent=totalF;
+  document.getElementById('prog3').style.width=Math.round(ok/ids.length*100)+'%';
+}
+
+function buildResumo(){
+  const cfg=tipo==='torre'?torreConfig:popConfig;
+  const ids=cfg.map(c=>'gal-'+c.id);
+  const totalF=ids.reduce((a,id)=>a+(fc[id]||0),0)+(fc['gal-ch']||0);
+  const nc=notas['nr-ch']||0;
+  let html=`
+    <div style="margin-bottom:14px">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-bottom:8px">Identificação</div>
+      ${row('Estrutura',document.getElementById('f-nome').value||'—')}
+      ${row('Tipo',tipo==='torre'?'Torre':'PoP')}
+      ${row('Data',document.getElementById('f-data').value||'—')}
+      ${row('Técnico',document.getElementById('f-tec').value||'—')}
+      ${row('GPS',document.getElementById('f-lat').value?document.getElementById('f-lat').value+', '+document.getElementById('f-lon').value:'Sem GPS')}
+      ${row('Nota chegada',nc?`<span style="font-family:var(--mono);color:${nc<=2?'var(--danger)':nc===3?'var(--warn)':'var(--accent)'}">${nc}/5</span>`:'—')}
+      ${row('Total de fotos',`<span style="color:var(--accent);font-family:var(--mono)">${totalF} fotos</span>`)}
+    </div>
+    <div>
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-bottom:8px">Itens</div>
+      ${cfg.map(item=>{const n=fc['gal-'+item.id]||0;return row(item.titulo,`<span style="font-family:var(--mono);color:${n===0?'var(--warn)':'var(--accent)'}">${n} foto(s)</span>`);}).join('')}
+    </div>`;
+  document.getElementById('resumo-body').innerHTML=html;
+}
+
+function row(l,v){return `<div style="display:flex;justify-content:space-between;padding:7px 0;border-top:1px solid var(--border);font-size:13px"><span style="color:var(--text2)">${l}</span><span style="font-weight:500">${v}</span></div>`;}
+
+// ── ENVIO ─────────────────────────────────────────────────────────────
+async function enviar(){
+  const btn=document.getElementById('btn-enviar');
+  btn.disabled=true;
+  const overlay=document.getElementById('sending-overlay');
+  const msg=document.getElementById('sending-msg');
+
+  try {
+    overlay.classList.add('show');
+    const cfg=tipo==='torre'?torreConfig:popConfig;
+
+    // 1. Upload das fotos de chegada
+    msg.textContent='Enviando fotos de chegada...';
+    const urlsChegada = await uploadFotos('gal-ch');
+
+    // 2. Upload das fotos por item
+    const itens=[];
+    for(let i=0;i<cfg.length;i++){
+      const item=cfg[i];
+      msg.textContent=`Enviando fotos: ${item.titulo}... (${i+1}/${cfg.length})`;
+      const urls = await uploadFotos('gal-'+item.id);
+      const notaId='nr-'+item.id;
+      const obsId='obs-'+item.id;
+      itens.push({
+        titulo:item.titulo,
+        nota:notas[notaId]||0,
+        obs:(document.getElementById(obsId)||{value:''}).value,
+        fotos:urls
+      });
+    }
+
+    // 3. Salvar vistoria
+    msg.textContent='Salvando vistoria no servidor...';
+    const totalFotos=itens.reduce((a,it)=>a+it.fotos.length,0)+urlsChegada.length;
+    const payload={
+      nome:document.getElementById('f-nome').value.trim(),
+      tipo, data:document.getElementById('f-data').value,
+      tecnico:document.getElementById('f-tec').value,
+      endereco:document.getElementById('f-end').value,
+      lat:document.getElementById('f-lat').value,
+      lon:document.getElementById('f-lon').value,
+      notaChegada:notas['nr-ch']||0,
+      descChegada:document.getElementById('f-ch-desc').value,
+      fotosChegada:urlsChegada,
+      itens, totalFotos,
+      obs:document.getElementById('f-obs').value
+    };
+
+    const res=await fetch(`${API}/api/vistorias`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(payload)
+    });
+    if(!res.ok) throw new Error('Erro ao salvar no servidor');
+
+    overlay.classList.remove('show');
+    document.querySelectorAll('.fstep').forEach(s=>s.classList.remove('active'));
+    document.getElementById('fs5').classList.add('active');
+  } catch(e) {
+    overlay.classList.remove('show');
+    alert('Erro ao enviar: '+e.message);
+    btn.disabled=false;
+  }
+}
+
+async function uploadFotos(galId){
+  const blobs=fileBlobs[galId]||[];
+  if(!blobs.length) return [];
+  const formData=new FormData();
+  blobs.forEach(b=>formData.append('fotos',b.file));
+  const res=await fetch(`${API}/api/upload`,{method:'POST',body:formData});
+  if(!res.ok) throw new Error('Falha no upload de fotos');
+  const data=await res.json();
+  return data.urls||[];
+}
+
+// init
+initForm();
+showScreen('home');
+</script>
+</body>
+</html>
