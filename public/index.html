@@ -545,15 +545,19 @@ async function showDetalhe(id) {
       ? Math.round((v.itens||[]).filter(i=>i.nota>0).reduce((a,i)=>a+i.nota,0)/(v.itens||[]).filter(i=>i.nota>0).length)
       : v.notaChegada||0;
 
-    const itensHtml=(v.itens||[]).map(it=>`
+    const itensHtml=(v.itens||[]).map(it=>{
+      const extrasHtml=it.extras?Object.entries(it.extras).filter(([k,v])=>v).map(([k,v])=>`
+        <div style="margin:4px 0;font-size:12px"><span style="color:var(--text2)">${k}:</span> <span style="color:var(--text);font-weight:500">${v}</span></div>`).join(''):'';
+      return `
       <div class="item-card">
         <div class="ic-head">
           <div class="ic-title">${it.titulo}</div>
           ${it.nota>0?`<div class="np np${it.nota}" style="width:28px;height:28px;font-size:12px">${it.nota}</div>`:''}
         </div>
+        ${extrasHtml?`<div style="margin:6px 0 4px">${extrasHtml}</div>`:''}
         ${it.obs?`<div class="ic-obs">${it.obs}</div>`:''}
         ${(it.fotos&&it.fotos.length>0)?`<div class="fotos-grid">${it.fotos.map(f=>`<img class="fg-img" src="${f}" onclick="openLB('${f}')" loading="lazy">`).join('')}</div>`:''}
-      </div>`).join('');
+      </div>`;}).join('');
 
     const chegadaFotos=(v.fotosChegada&&v.fotosChegada.length>0)?`
       <div class="det-sec">
@@ -573,6 +577,7 @@ async function showDetalhe(id) {
         <span>👤 ${v.tecnico||'—'}</span>
         <span>📍 ${v.lat&&v.lon?v.lat+', '+v.lon:'Sem GPS'}</span>
         <span>⭐ Nota média: ${nm}</span>
+        ${v.tipoAcesso?`<span>🚗 Acesso: ${v.tipoAcesso}</span>`:''}
         <span>📷 ${v.totalFotos||0} fotos</span>
       </div>
       <div style="margin-top:20px">
@@ -862,11 +867,18 @@ async function enviar(){
       const urls = await uploadFotos('gal-'+item.id);
       const notaId='nr-'+item.id;
       const obsId='obs-'+item.id;
+      // Coletar campos extras (radio e texto) de cada item
+      const extrasData={};
+      (item.extras||[]).forEach(ex=>{
+        if(ex.type==='radio'){ extrasData[ex.label]=rads[ex.id]||''; }
+        else if(ex.type==='text'){ const el=document.getElementById(ex.id); extrasData[ex.label]=el?el.value:''; }
+      });
       itens.push({
         titulo:item.titulo,
         nota:notas[notaId]||0,
         obs:(document.getElementById(obsId)||{value:''}).value,
-        fotos:urls
+        fotos:urls,
+        extras:extrasData
       });
     }
 
@@ -881,6 +893,7 @@ async function enviar(){
       lat:document.getElementById('f-lat').value,
       lon:document.getElementById('f-lon').value,
       notaChegada:notas['nr-ch']||0,
+      tipoAcesso:rads['rg-ac']||'',
       descChegada:document.getElementById('f-ch-desc').value,
       fotosChegada:urlsChegada,
       itens, totalFotos,
